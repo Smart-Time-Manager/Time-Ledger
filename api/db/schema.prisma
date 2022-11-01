@@ -1,0 +1,99 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = "native"
+}
+
+model User {
+  id   String @id @default(cuid())
+  createdAt DateTime @default(now())
+  email     String   @unique
+  username  String?
+  phone     String?
+  // avatar image
+  refereringId String?    @unique
+  referering   User?   @relation("refer", fields: [refereringId], references: [id])
+  referered User[]   @relation("refer")
+  // relations
+  profile Profile?
+  tags Tag[]
+  categories Category[]
+  templates Template[]
+  records Record[]
+}
+
+model Profile {
+  id   String @id @default(cuid())
+  user User @relation(fields: [userId], references: [id])
+  userId String @unique
+  favoriteTags Tag[]
+  favoriteCategories Category[]
+  favoriteTemplates Template[]
+}
+
+model Tag {
+  id   String @id @default(cuid())
+  title  String
+  description String?
+  creator User @relation(fields: [creatorId], references: [id])
+  creatorId String
+  // relations
+  profiles Profile[]
+  records Record[]
+  templates Template[]
+}
+
+model Category {
+  id   String @id @default(cuid())
+  title  String
+  description String?
+  creator User @relation(fields: [creatorId], references: [id])
+  creatorId String
+
+  //self realtion
+  parentId String?    @unique
+  parent   Category?   @relation("tree", fields: [parentId], references: [id])
+  children Category[]   @relation("tree")
+
+  // relations
+  profiles Profile[]
+  templates Template[]
+}
+
+model Template {
+  id   String @id @default(cuid())
+  title  String
+  description String?
+  creator User @relation(fields: [creatorId], references: [id])
+  creatorId String
+  meta Json
+
+  //self realtion
+  parentId String?    @unique
+  parent   Template?   @relation("tree", fields: [parentId], references: [id])
+  children Template[]   @relation("tree")
+
+  // relations
+  profiles Profile[]
+  tags Tag[]
+  categories Category[]
+  records Record[]
+
+}
+
+model Record {
+  id   String @id @default(cuid())
+  title  String
+  description String?
+  creator User @relation(fields: [creatorId], references: [id])
+  creatorId String
+  meta Json
+  // relations
+  tags Tag[]
+  template   Template @relation(fields: [templateId], references: [id])
+  templateId String
+}
